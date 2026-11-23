@@ -27,7 +27,10 @@ import type {
   WeeklyPerformanceEntry,
 } from "@/lib/types";
 import { DICTIONARIES, type Locale } from "@/lib/i18n";
-import { GLOBAL_BOOKMAKERS } from "@/config/bookmakers";
+import {
+  BOOKMAKER_CATEGORIES,
+  type BookmakerConfig,
+} from "@/config/bookmakers";
 import { AuditSection } from "./AuditSection";
 
 const TELEGRAM_BOT_URL = "https://t.me/mom123_daily_bot";
@@ -60,7 +63,12 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
   const [openBookmakerId, setOpenBookmakerId] = useState<string | null>(null);
+  const [executeToast, setExecuteToast] = useState<{
+    match: string;
+    bookmaker: string;
+  } | null>(null);
   const signalsGridRef = useRef<HTMLDivElement | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -178,6 +186,28 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
       await navigator.clipboard.writeText(text);
       setCopiedId(`${s.home}-${s.away}-${idx}`);
       setTimeout(() => setCopiedId(null), 1800);
+    }
+  };
+
+  const handleExecuteBookmaker = (
+    s: PredictionSignal,
+    bm: BookmakerConfig
+  ) => {
+    const matchSummary = `${s.home} vs ${s.away} | ${s.market}${
+      s.selection_side ? ` [${s.selection_side}]` : ""
+    }`;
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(matchSummary).catch(() => {
+        // clipboard permission optional
+      });
+    }
+    setOpenBookmakerId(null);
+    setExecuteToast({ match: matchSummary, bookmaker: bm.name });
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setExecuteToast(null), 3200);
+
+    if (typeof window !== "undefined") {
+      window.open(bm.affiliateUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -994,7 +1024,7 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
 
                       {isMenuOpen && (
                         <div
-                          className={`absolute bottom-full z-30 mb-2 w-64 max-w-[calc(100vw-3rem)] rounded-xl border border-white/15 bg-[#0B0F19]/95 p-2 shadow-2xl shadow-black/80 backdrop-blur-xl ${
+                          className={`absolute bottom-full z-30 mb-2 w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-white/15 bg-[#0B0F19]/95 p-2.5 shadow-2xl shadow-black/80 backdrop-blur-xl ${
                             t.dir === "rtl" ? "left-0" : "right-0"
                           }`}
                         >
@@ -1004,29 +1034,45 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                               {minOdds.toFixed(2)}
                             </span>
                           </div>
-                          <div className="mt-2 px-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                            {t.executeDropdownHeader}
-                          </div>
-                          <div className="mt-1 space-y-1">
-                            {GLOBAL_BOOKMAKERS.map((bm) => (
-                              <a
-                                key={bm.id}
-                                href={bm.affiliateUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => setOpenBookmakerId(null)}
-                                className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition-all duration-150 hover:bg-white/[0.06]"
+
+                          <div className="mt-2.5 space-y-2.5">
+                            {BOOKMAKER_CATEGORIES.map((group, gIdx) => (
+                              <div
+                                key={group.id}
+                                className={
+                                  gIdx > 0
+                                    ? "border-t border-white/10 pt-2.5"
+                                    : ""
+                                }
                               >
-                                <div className="min-w-0">
-                                  <div className="font-semibold text-white">
-                                    {bm.name}
-                                  </div>
-                                  <div className="truncate text-[10px] text-slate-400">
-                                    {bm.tag}
-                                  </div>
+                                <div className="px-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                  {group.id === "global-crypto"
+                                    ? t.bookmakerCatGlobalCrypto
+                                    : t.bookmakerCatEuLicensed}
                                 </div>
-                                <ExternalLink className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" />
-                              </a>
+                                <div className="mt-1 space-y-1">
+                                  {group.items.map((bm) => (
+                                    <button
+                                      key={bm.id}
+                                      type="button"
+                                      onClick={() =>
+                                        handleExecuteBookmaker(sig, bm)
+                                      }
+                                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-start text-xs transition-all duration-150 hover:bg-white/[0.06]"
+                                    >
+                                      <div className="min-w-0">
+                                        <div className="font-semibold text-white">
+                                          {bm.name}
+                                        </div>
+                                        <div className="truncate font-mono text-[10px] text-slate-400">
+                                          {bm.tag}
+                                        </div>
+                                      </div>
+                                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" />
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -1090,6 +1136,29 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
           </div>
         </div>
       </footer>
+      {/* Subtle Floating Copy-Before-Redirect Toast */}
+      {executeToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-5 end-5 z-50 flex max-w-[calc(100vw-2.5rem)] items-start gap-2.5 rounded-xl border border-emerald-500/40 bg-[#0B0F19]/95 px-4 py-3 shadow-2xl shadow-black/70 backdrop-blur-xl"
+        >
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+            <Check className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0 text-xs">
+            <div className="font-semibold text-emerald-300">
+              {t.matchCopiedToastTitle}
+            </div>
+            <div className="mt-0.5 truncate font-mono text-[11px] text-slate-200">
+              {executeToast.match}
+            </div>
+            <div className="mt-0.5 text-[10px] text-slate-400">
+              {executeToast.bookmaker} · {t.matchCopiedToastSub}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

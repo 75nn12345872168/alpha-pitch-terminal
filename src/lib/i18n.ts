@@ -103,6 +103,10 @@ export interface Dictionary {
   executePickBtn: string;
   executeDropdownHeader: string;
   executeMinOddsReminder: string;
+  bookmakerCatGlobalCrypto: string;
+  bookmakerCatEuLicensed: string;
+  matchCopiedToastTitle: string;
+  matchCopiedToastSub: string;
   // Weekly Transparency Archive Table
   weeklyArchiveTitle: string;
   weeklyArchiveSubtitle: string;
@@ -239,6 +243,10 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
     executePickBtn: "Execute Pick ↗",
     executeDropdownHeader: "Global Sportsbooks",
     executeMinOddsReminder: "Only enter if odds ≥",
+    bookmakerCatGlobalCrypto: "Global & Crypto Access",
+    bookmakerCatEuLicensed: "EU & International Licensed",
+    matchCopiedToastTitle: "Match copied — paste in search",
+    matchCopiedToastSub: "Opening sportsbook in new tab…",
     weeklyArchiveTitle: "Weekly Transparency Archive",
     weeklyArchiveSubtitle:
       "Permanent Tue–Mon UTC matchweek audit ledger. Once every fixture in a matchweek settles, it locks automatically as CLOSED_ARCHIVED with full match-level P&L.",
@@ -374,6 +382,10 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
     executePickBtn: "تنفيذ الصفقة ↗",
     executeDropdownHeader: "المنصات العالمية المعتمدة",
     executeMinOddsReminder: "ادخل فقط إذا كان السعر ≥",
+    bookmakerCatGlobalCrypto: "الوصول العالمي والعملات الرقمية",
+    bookmakerCatEuLicensed: "المنصات الأوروبية والدولية المرخصة",
+    matchCopiedToastTitle: "تم نسخ المباراة — الصقها في البحث",
+    matchCopiedToastSub: "جارٍ فتح المنصة في تبويب جديد…",
     weeklyArchiveTitle: "جدول الأرشيف الأسبوعي المفتوح (Weekly Transparency Archive)",
     weeklyArchiveSubtitle:
       "سجل تدقيق دائم لكل جولة كروية (الثلاثاء–الاثنين UTC). بمجرد تسوية آخر مباراة في الجولة، تُغلق تلقائياً بحالة CLOSED_ARCHIVED مع حفظ تفاصيل كل صفقة.",
@@ -509,6 +521,10 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
     executePickBtn: "Exécuter ↗",
     executeDropdownHeader: "Bookmakers Mondiaux",
     executeMinOddsReminder: "Entrez uniquement si cote ≥",
+    bookmakerCatGlobalCrypto: "Accès Mondial & Crypto",
+    bookmakerCatEuLicensed: "Licences UE & Internationales",
+    matchCopiedToastTitle: "Match copié — collez dans la recherche",
+    matchCopiedToastSub: "Ouverture du bookmaker dans un nouvel onglet…",
     weeklyArchiveTitle: "Archive Hebdomadaire Transparente",
     weeklyArchiveSubtitle:
       "Journal d'audit permanent par journée (Mar–Lun UTC). Dès que tous les matchs d'une journée sont réglés, elle est verrouillée en CLOSED_ARCHIVED.",

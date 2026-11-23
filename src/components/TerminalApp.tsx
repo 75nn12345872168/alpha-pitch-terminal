@@ -57,9 +57,9 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
   const [riskMultiplier, setRiskMultiplier] = useState<number>(1.0);
   const [selectedLeague, setSelectedLeague] = useState<string>("ALL");
   const [selectedMarket, setSelectedMarket] = useState<string>("ALL");
-  const [sortBy, setSortBy] = useState<"confidence" | "kickoff" | "odds">(
-    "confidence"
-  );
+  const [sortBy, setSortBy] = useState<
+    "confidence" | "kickoff" | "odds" | "live_ev"
+  >("confidence");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
   const [openBookmakerId, setOpenBookmakerId] = useState<string | null>(null);
@@ -116,6 +116,14 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
       return true;
     });
     return [...list].sort((a, b) => {
+      if (sortBy === "live_ev") {
+        const hasA = a.live_ev_pct !== null && a.live_ev_pct !== undefined;
+        const hasB = b.live_ev_pct !== null && b.live_ev_pct !== undefined;
+        if (hasA !== hasB) return hasA ? -1 : 1;
+        const eva = hasA ? Number(a.live_ev_pct) : a.ev_percent;
+        const evb = hasB ? Number(b.live_ev_pct) : b.ev_percent;
+        return evb - eva;
+      }
       if (sortBy === "kickoff") return a.date.localeCompare(b.date);
       if (sortBy === "odds") {
         const oa = a.min_odds ?? a.market_odds;
@@ -672,13 +680,20 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                   value={sortBy}
                   onChange={(e) =>
                     setSortBy(
-                      e.target.value as "confidence" | "kickoff" | "odds"
+                      e.target.value as
+                        | "confidence"
+                        | "kickoff"
+                        | "odds"
+                        | "live_ev"
                     )
                   }
                   className="w-full min-w-0 bg-transparent text-xs font-medium text-white outline-none"
                 >
                   <option value="confidence" className="bg-[#0B0F19]">
                     {t.sortConfidence}
+                  </option>
+                  <option value="live_ev" className="bg-[#0B0F19]">
+                    {t.sortLiveEv}
                   </option>
                   <option value="kickoff" className="bg-[#0B0F19]">
                     {t.sortKickoff}
@@ -883,11 +898,35 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                 const cardId = `${sig.home}-${sig.away}-${idx}`;
                 const isCopied = copiedId === cardId;
                 const isMenuOpen = openBookmakerId === cardId;
+                const hasLiveOdds =
+                  sig.live_best_odds !== null &&
+                  sig.live_best_odds !== undefined &&
+                  sig.live_best_odds > 1.0;
+                const liveBestOdds = hasLiveOdds
+                  ? Number(sig.live_best_odds)
+                  : null;
+                const liveEvPct =
+                  hasLiveOdds &&
+                  sig.live_ev_pct !== null &&
+                  sig.live_ev_pct !== undefined
+                    ? Number(sig.live_ev_pct)
+                    : liveBestOdds !== null
+                    ? Number(((sig.p_calibrated * liveBestOdds - 1) * 100).toFixed(2))
+                    : null;
+                const isLiveActionable =
+                  hasLiveOdds &&
+                  (sig.is_live_actionable !== undefined
+                    ? Boolean(sig.is_live_actionable)
+                    : liveBestOdds !== null && liveBestOdds >= minOdds);
 
                 return (
                   <article
                     key={cardId}
-                    className="group relative flex flex-col justify-between rounded-2xl border border-white/10 bg-[#0B0F19]/85 p-5 shadow-xl backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-emerald-500/10"
+                    className={`group relative flex flex-col justify-between rounded-2xl border bg-[#0B0F19]/85 p-5 shadow-xl backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 ${
+                      isLiveActionable
+                        ? "border-emerald-500/40 shadow-emerald-500/10 hover:border-emerald-400/70"
+                        : "border-white/10 hover:border-emerald-500/40 hover:shadow-emerald-500/10"
+                    }`}
                   >
                     <div>
                       {/* Top Meta Row: League + Kickoff */}
@@ -918,17 +957,35 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                         </div>
                       </div>
 
-                      {/* Market Selection & Safety Tag */}
+                      {/* Market Selection & Live Actionability Badge */}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center rounded-lg border border-white/15 bg-white/[0.05] px-2.5 py-1 text-xs font-semibold text-white">
                           {sig.market}
                           {sig.selection_side ? ` · ${sig.selection_side}` : ""}
                         </span>
-                        <span className="inline-flex items-center rounded-lg border border-emerald-500/35 bg-emerald-500/12 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-300">
-                          {sig.price_type === "verified"
-                            ? t.verifiedOddsBadge
-                            : t.evSafetyBadge}
-                        </span>
+
+                        {hasLiveOdds ? (
+                          isLiveActionable ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/55 bg-emerald-500/20 px-2.5 py-1 font-mono text-[10px] font-bold tracking-wide text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.28)]">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                              </span>
+                              {t.badgeLiveEvReady}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/45 bg-amber-500/15 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wide text-amber-300">
+                              <Clock className="h-3 w-3" />
+                              {t.badgeBelowMinWait}
+                            </span>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center rounded-lg border border-emerald-500/35 bg-emerald-500/12 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-300">
+                            {sig.price_type === "verified"
+                              ? t.verifiedOddsBadge
+                              : t.evSafetyBadge}
+                          </span>
+                        )}
                       </div>
 
                       {/* Visual Calibrated Probability Progress Bar */}
@@ -949,6 +1006,50 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                         </div>
                       </div>
 
+                      {/* Live Best Odds Comparison Strip (when The Odds API live price exists) */}
+                      {hasLiveOdds && liveBestOdds !== null && (
+                        <div
+                          className={`mt-3 flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 ${
+                            isLiveActionable
+                              ? "border-emerald-500/35 bg-emerald-500/[0.08]"
+                              : "border-amber-500/30 bg-amber-500/[0.06]"
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-medium text-slate-400">
+                              {t.liveBestOddsLabel}
+                            </div>
+                            <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
+                              <span
+                                className={`font-mono text-lg font-bold tabular-nums ${
+                                  isLiveActionable
+                                    ? "text-emerald-400"
+                                    : "text-amber-300"
+                                }`}
+                              >
+                                {liveBestOdds.toFixed(2)}
+                              </span>
+                              {sig.live_best_bookmaker && (
+                                <span className="truncate font-mono text-[11px] font-medium text-slate-200">
+                                  @ {sig.live_best_bookmaker}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {sig.live_pinnacle_odds !== null &&
+                            sig.live_pinnacle_odds !== undefined && (
+                              <div className="shrink-0 text-end">
+                                <div className="text-[9px] uppercase tracking-wider text-slate-400">
+                                  Pinnacle
+                                </div>
+                                <div className="font-mono text-xs font-semibold text-slate-200 tabular-nums">
+                                  {Number(sig.live_pinnacle_odds).toFixed(2)}
+                                </div>
+                              </div>
+                            )}
+                        </div>
+                      )}
+
                       {/* Balanced 3-Metric Financial Micro-Grid (2-Second Decision Read) */}
                       <div className="mt-3 grid grid-cols-3 gap-2">
                         <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-2.5 py-2.5 text-center">
@@ -962,10 +1063,22 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
 
                         <div className="rounded-xl border border-white/[0.08] bg-[#090D16]/90 px-2.5 py-2.5 text-center">
                           <div className="truncate text-[10px] font-medium text-slate-400">
-                            EV %
+                            {hasLiveOdds ? t.liveEvLabel : "EV %"}
                           </div>
-                          <div className="mt-1 font-mono text-base font-bold text-emerald-400 tabular-nums sm:text-lg">
-                            +{sig.ev_percent.toFixed(1)}%
+                          <div
+                            className={`mt-1 font-mono text-base font-bold tabular-nums sm:text-lg ${
+                              liveEvPct !== null
+                                ? liveEvPct > 0
+                                  ? "text-emerald-400"
+                                  : liveEvPct < 0
+                                  ? "text-rose-400"
+                                  : "text-slate-200"
+                                : "text-emerald-400"
+                            }`}
+                          >
+                            {liveEvPct !== null
+                              ? `${liveEvPct > 0 ? "+" : ""}${liveEvPct.toFixed(1)}%`
+                              : `+${sig.ev_percent.toFixed(1)}%`}
                           </div>
                         </div>
 
@@ -1012,7 +1125,13 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                             prev === cardId ? null : cardId
                           )
                         }
-                        className="inline-flex h-9 items-center justify-center gap-1 rounded-lg border border-emerald-500/45 bg-emerald-500/15 px-3 text-xs font-semibold text-emerald-300 transition-all duration-200 hover:border-emerald-400 hover:bg-emerald-500/25 hover:text-emerald-200"
+                        className={`inline-flex h-9 items-center justify-center gap-1 rounded-lg border px-3 text-xs font-semibold transition-all duration-200 ${
+                          isLiveActionable
+                            ? "border-emerald-400 bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/25 hover:bg-emerald-400"
+                            : hasLiveOdds
+                            ? "border-amber-500/35 bg-amber-500/10 text-amber-300 hover:border-amber-400/60 hover:bg-amber-500/20"
+                            : "border-emerald-500/45 bg-emerald-500/15 text-emerald-300 hover:border-emerald-400 hover:bg-emerald-500/25 hover:text-emerald-200"
+                        }`}
                       >
                         <span className="truncate">{t.executePickBtn}</span>
                         <ChevronDown

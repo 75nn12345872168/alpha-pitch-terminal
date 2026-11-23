@@ -38,6 +38,11 @@ export interface Dictionary {
   sortConfidence: string;
   sortKickoff: string;
   sortMinOdds: string;
+  sortLiveEv: string;
+  liveBestOddsLabel: string;
+  liveEvLabel: string;
+  badgeLiveEvReady: string;
+  badgeBelowMinWait: string;
   noSignals: string;
   calibratedProb: string;
   minOddsLabel: string;
@@ -173,6 +178,11 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
     sortConfidence: "Sort: Calibrated Prob",
     sortKickoff: "Sort: Kickoff Time",
     sortMinOdds: "Sort: Highest Min Odds",
+    sortLiveEv: "Sort: Live EV %",
+    liveBestOddsLabel: "Live Best Odds",
+    liveEvLabel: "Live EV %",
+    badgeLiveEvReady: "LIVE +EV READY",
+    badgeBelowMinWait: "BELOW MIN ODDS · WAIT",
     noSignals: "No approved signals match the selected filter right now.",
     calibratedProb: "Calibrated Prob",
     minOddsLabel: "Min Acceptable Odds",
@@ -312,6 +322,11 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
     sortConfidence: "الترتيب: الأعلى ثقة",
     sortKickoff: "الترتيب: موعد المباراة",
     sortMinOdds: "الترتيب: أعلى حد أدنى للسعر",
+    sortLiveEv: "الترتيب: الأعلى Live EV %",
+    liveBestOddsLabel: "أفضل سعر حي",
+    liveEvLabel: "Live EV %",
+    badgeLiveEvReady: "LIVE +EV READY",
+    badgeBelowMinWait: "أقل من الحد · انتظر",
     noSignals: "لا توجد إشارات معتمدة مطابقة للفلتر المحدد حالياً.",
     calibratedProb: "الاحتمال المعايَر",
     minOddsLabel: "الحد الأدنى للسعر المقبول",
@@ -451,6 +466,11 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
     sortConfidence: "Tri : Probabilité Calibrée",
     sortKickoff: "Tri : Coup d'Envoi",
     sortMinOdds: "Tri : Cote Min Max",
+    sortLiveEv: "Tri : Live EV %",
+    liveBestOddsLabel: "Meilleure Cote Live",
+    liveEvLabel: "Live EV %",
+    badgeLiveEvReady: "LIVE +EV PRÊT",
+    badgeBelowMinWait: "SOUS COTE MIN · ATTENDRE",
     noSignals: "Aucun signal approuvé ne correspond à ce filtre.",
     calibratedProb: "Probabilité Calibrée",
     minOddsLabel: "Cote Minimale Requise",

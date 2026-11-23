@@ -18,6 +18,11 @@ export interface PredictionSignal {
   market_odds: number;
   ev_percent: number;
   stake_kelly: number;
+  live_best_odds?: number | null;
+  live_best_bookmaker?: string | null;
+  live_pinnacle_odds?: number | null;
+  live_ev_pct?: number | null;
+  is_live_actionable?: boolean;
   expected_goals: ExpectedGoals;
 }
 
@@ -99,6 +104,11 @@ export interface PredictionsLatestData {
   generated_at: string;
   engine_version: string;
   transparency_banner?: TransparencyBannerData;
+  live_odds_meta?: {
+    provider: string;
+    live_priced_count: number;
+    live_actionable_count: number;
+  };
   min_confidence_pct: number;
   dnb_min_confidence_pct?: number;
   safety_margin_pct: number;

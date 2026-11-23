@@ -1,0 +1,216 @@
+{
+  "generated_at": "2026-11-23T06:25:17.457820+00:00",
+  "engine_version": "v4-alpha-promoted",
+  "min_confidence_pct": 60.0,
+  "dnb_min_confidence_pct": 70.0,
+  "safety_margin_pct": 6.0,
+  "approved_leagues": [
+    "EPL",
+    "La Liga",
+    "Serie A"
+  ],
+  "approved_pairs": [
+    [
+      "EPL",
+      "DNB Home"
+    ],
+    [
+      "La Liga",
+      "1X2 Home"
+    ],
+    [
+      "La Liga",
+      "DNB Home"
+    ],
+    [
+      "Serie A",
+      "1X2 Away"
+    ],
+    [
+      "Serie A",
+      "DNB Home"
+    ],
+    [
+      "Serie A",
+      "Over 2.5"
+    ]
+  ],
+  "mle_calibration": {
+    "epl": {
+      "mu_home": 1.53,
+      "mu_away": 1.233,
+      "rho": -0.03,
+      "status": "fitted",
+      "n": 760
+    },
+    "la liga": {
+      "mu_home": 1.569,
+      "mu_away": 1.192,
+      "rho": -0.02,
+      "status": "cached",
+      "n": 760
+    },
+    "serie a": {
+      "mu_home": 1.416,
+      "mu_away": 1.288,
+      "rho": 0.02,
+      "status": "cached",
+      "n": 760
+    }
+  },
+  "count": 8,
+  "predictions": [
+    {
+      "date": "2026-11-28 13:00:00",
+      "league": "La Liga",
+      "home": "Real Betis",
+      "away": "Rayo Vallecano",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.6713,
+      "p_calibrated": 0.7257,
+      "price_type": "model",
+      "min_odds": 1.46,
+      "market_odds": 1.46,
+      "ev_percent": 5.95,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 1.69,
+        "away": 1.112
+      }
+    },
+    {
+      "date": "2026-11-28 14:00:00",
+      "league": "Serie A",
+      "home": "Frosinone",
+      "away": "Parma Calcio 1913",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.6756,
+      "p_calibrated": 0.7285,
+      "price_type": "model",
+      "min_odds": 1.46,
+      "market_odds": 1.46,
+      "ev_percent": 6.36,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 1.815,
+        "away": 1.187
+      }
+    },
+    {
+      "date": "2026-11-28 15:00:00",
+      "league": "EPL",
+      "home": "Leeds",
+      "away": "Coventry",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.6646,
+      "p_calibrated": 0.7172,
+      "price_type": "model",
+      "min_odds": 1.48,
+      "market_odds": 1.48,
+      "ev_percent": 6.15,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 1.607,
+        "away": 1.071
+      }
+    },
+    {
+      "date": "2026-11-28 19:45:00",
+      "league": "Serie A",
+      "home": "Inter",
+      "away": "Genoa",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.7802,
+      "p_calibrated": 0.8566,
+      "price_type": "model",
+      "min_odds": 1.24,
+      "market_odds": 1.24,
+      "ev_percent": 6.22,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 1.965,
+        "away": 0.93
+      }
+    },
+    {
+      "date": "2026-11-28 20:00:00",
+      "league": "La Liga",
+      "home": "Real Madrid",
+      "away": "Alaves",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.8112,
+      "p_calibrated": 0.8898,
+      "price_type": "model",
+      "min_odds": 1.19,
+      "market_odds": 1.19,
+      "ev_percent": 5.89,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 2.114,
+        "away": 0.915
+      }
+    },
+    {
+      "date": "2026-11-29 17:00:00",
+      "league": "Serie A",
+      "home": "Roma",
+      "away": "Monza",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.7623,
+      "p_calibrated": 0.8368,
+      "price_type": "model",
+      "min_odds": 1.27,
+      "market_odds": 1.27,
+      "ev_percent": 6.27,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 2.026,
+        "away": 1.034
+      }
+    },
+    {
+      "date": "2026-11-29 20:00:00",
+      "league": "La Liga",
+      "home": "Real Sociedad",
+      "away": "Sevilla",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.6629,
+      "p_calibrated": 0.7143,
+      "price_type": "model",
+      "min_odds": 1.48,
+      "market_odds": 1.48,
+      "ev_percent": 5.72,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 1.64,
+        "away": 1.1
+      }
+    },
+    {
+      "date": "2026-11-30 20:00:00",
+      "league": "La Liga",
+      "home": "Espanyol",
+      "away": "Getafe",
+      "market": "DNB Home",
+      "selection_side": "HOME",
+      "p_model": 0.6541,
+      "p_calibrated": 0.7022,
+      "price_type": "model",
+      "min_odds": 1.51,
+      "market_odds": 1.51,
+      "ev_percent": 6.03,
+      "stake_kelly": 0.02,
+      "expected_goals": {
+        "home": 1.277,
+        "away": 0.847
+      }
+    }
+  ]
+}

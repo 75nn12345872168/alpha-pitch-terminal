@@ -70,6 +70,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({
@@ -80,8 +83,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${cairo.variable} dark`}
+      translate="no"
+      className={`${inter.variable} ${jetbrainsMono.variable} ${cairo.variable} dark notranslate`}
     >
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body className="font-sans antialiased bg-[#090D16] text-slate-100 selection:bg-emerald-500/30 selection:text-emerald-200">
         {children}
       </body>

@@ -3,14 +3,20 @@
 import React, { useMemo, useState } from "react";
 import {
   Activity,
+  Archive,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Clock,
   Database,
+  Lock,
   ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
 import type {
   BacktestVerifiedStatsData,
   PerformanceSummaryData,
+  WeeklyArchiveData,
 } from "@/lib/types";
 import type { Dictionary } from "@/lib/i18n";
 import { PerformanceChart } from "./PerformanceChart";
@@ -18,17 +24,24 @@ import { PerformanceChart } from "./PerformanceChart";
 interface AuditSectionProps {
   backtest: BacktestVerifiedStatsData;
   performance: PerformanceSummaryData;
+  weeklyArchive: WeeklyArchiveData;
   bankroll: number;
+  riskMultiplier: number;
   t: Dictionary;
 }
 
 export function AuditSection({
   backtest,
   performance,
+  weeklyArchive,
   bankroll,
+  riskMultiplier,
   t,
 }: AuditSectionProps) {
   const [showAllPairs, setShowAllPairs] = useState(false);
+  const [expandedWeekId, setExpandedWeekId] = useState<string | null>(
+    weeklyArchive?.weeks?.[0]?.matchweek_id ?? null
+  );
 
   const tableRows = useMemo(() => {
     const base = showAllPairs
@@ -363,6 +376,290 @@ export function AuditSection({
             </div>
           </dl>
         </div>
+      </div>
+
+      {/* Weekly Transparency Archive Table */}
+      <div className="overflow-hidden rounded-2xl border border-slate-800/80 bg-[#111827]/95 shadow-xl">
+        <div className="flex flex-col gap-2 border-b border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Archive className="h-4 w-4 text-emerald-400" />
+              <h3 className="text-base font-semibold text-white">
+                {t.weeklyArchiveTitle}
+              </h3>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {t.weeklyArchiveSubtitle}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-slate-400">
+            <span className="rounded-md border border-slate-700/80 bg-[#090D16] px-2.5 py-1">
+              {t.badgeClosedArchived}:{" "}
+              <strong className="text-emerald-300">
+                {weeklyArchive?.closed_weeks_count ?? 0}
+              </strong>
+            </span>
+          </div>
+        </div>
+
+        {!weeklyArchive?.weeks || weeklyArchive.weeks.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-400">
+            {t.weeklyArchiveEmpty}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[840px] border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 bg-[#090D16]/70 text-slate-400">
+                  <th className="px-4 py-3 text-start font-medium">
+                    {t.colMatchweek}
+                  </th>
+                  <th className="px-3 py-3 text-center font-medium">
+                    {t.colWindowStatus}
+                  </th>
+                  <th className="px-3 py-3 text-end font-medium">
+                    {t.colRecord}
+                  </th>
+                  <th className="px-3 py-3 text-end font-medium">
+                    {t.colKellyChange}
+                  </th>
+                  <th className="px-3 py-3 text-end font-medium">
+                    {t.colMinOddsRoi}
+                  </th>
+                  <th className="px-3 py-3 text-end font-medium">
+                    {t.colFlatUnits}
+                  </th>
+                  <th className="px-3 py-3 text-end font-medium">
+                    {t.colClosingRoi}
+                  </th>
+                  <th className="px-4 py-3 text-center font-medium">
+                    {t.colDetails}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/70 font-mono tabular-nums">
+                {weeklyArchive.weeks.map((wk) => {
+                  const isClosed = wk.archive_status === "CLOSED_ARCHIVED";
+                  const isExpanded = expandedWeekId === wk.matchweek_id;
+                  const scaledPct = wk.kelly_bankroll_change_pct * riskMultiplier;
+                  const scaledUsd = bankroll * (scaledPct / 100);
+                  const sign = scaledPct > 0 ? "+" : scaledPct < 0 ? "-" : "";
+                  const pnlColor =
+                    wk.settled_picks === 0
+                      ? "text-amber-300"
+                      : scaledPct > 0
+                      ? "text-emerald-400"
+                      : scaledPct < 0
+                      ? "text-rose-400"
+                      : "text-slate-300";
+
+                  return (
+                    <React.Fragment key={wk.matchweek_id}>
+                      <tr className="transition hover:bg-slate-800/35">
+                        <td className="px-4 py-3 text-slate-100">
+                          <div className="font-semibold">{wk.label}</div>
+                          <div className="text-[10px] text-slate-500">
+                            {wk.matchweek_id}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-center font-sans">
+                          {isClosed ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-300">
+                              <Lock className="h-3 w-3" />
+                              {t.badgeClosedArchived}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-amber-300">
+                              <Clock className="h-3 w-3" />
+                              {t.badgeActiveWeek}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-end text-slate-200">
+                          {wk.wins}W · {wk.half_wins}HW · {wk.losses}L
+                          {wk.pushes > 0 ? ` · ${wk.pushes}P` : ""}
+                          {wk.pending_picks > 0 ? (
+                            <span className="text-amber-300">
+                              {" "}
+                              ({wk.pending_picks}Pnd)
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className={`px-3 py-3 text-end font-semibold ${pnlColor}`}>
+                          {wk.settled_picks > 0 ? (
+                            <>
+                              {sign}${Math.abs(scaledUsd).toFixed(2)}{" "}
+                              <span className="text-[10px] opacity-85">
+                                ({sign}
+                                {Math.abs(scaledPct).toFixed(2)}%)
+                              </span>
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-end text-slate-200">
+                          {wk.conservative_min_odds_roi_pct !== null
+                            ? `${wk.conservative_min_odds_roi_pct > 0 ? "+" : ""}${wk.conservative_min_odds_roi_pct.toFixed(2)}%`
+                            : "—"}
+                        </td>
+                        <td className="px-3 py-3 text-end text-slate-200">
+                          {wk.settled_picks > 0
+                            ? `${wk.flat_net_units > 0 ? "+" : ""}${wk.flat_net_units.toFixed(2)}u`
+                            : "—"}
+                        </td>
+                        <td className="px-3 py-3 text-end text-cyan-300">
+                          {wk.closing_odds_roi_pct !== null
+                            ? `${wk.closing_odds_roi_pct > 0 ? "+" : ""}${wk.closing_odds_roi_pct.toFixed(2)}%`
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-center font-sans">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedWeekId(
+                                isExpanded ? null : wk.matchweek_id
+                              )
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-[#090D16] px-2.5 py-1 text-[11px] font-medium text-slate-300 transition hover:border-cyan-500/50 hover:text-cyan-300"
+                          >
+                            <span>
+                              {isExpanded ? t.hidePicksBtn : t.viewPicksBtn} (
+                              {wk.total_picks})
+                            </span>
+                            {isExpanded ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {isExpanded && wk.picks && wk.picks.length > 0 && (
+                        <tr className="bg-[#090D16]/85">
+                          <td colSpan={8} className="px-4 py-3">
+                            <div className="overflow-x-auto rounded-xl border border-slate-800/90">
+                              <table className="w-full min-w-[700px] border-collapse text-[11px]">
+                                <thead>
+                                  <tr className="border-b border-slate-800 bg-slate-900/70 text-slate-400">
+                                    <th className="px-3 py-2 text-start font-medium">
+                                      {t.pickColMatch}
+                                    </th>
+                                    <th className="px-2.5 py-2 text-center font-medium">
+                                      {t.pickColScore}
+                                    </th>
+                                    <th className="px-2.5 py-2 text-end font-medium">
+                                      {t.pickColOdds}
+                                    </th>
+                                    <th className="px-2.5 py-2 text-end font-medium">
+                                      {t.pickColClosing}
+                                    </th>
+                                    <th className="px-2.5 py-2 text-end font-medium">
+                                      {t.pickColStake}
+                                    </th>
+                                    <th className="px-2.5 py-2 text-center font-medium">
+                                      {t.colStatus}
+                                    </th>
+                                    <th className="px-3 py-2 text-end font-medium">
+                                      {t.pickColPnl}
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800/60">
+                                  {wk.picks.map((pk, idx) => {
+                                    const stColor =
+                                      pk.status === "WIN"
+                                        ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"
+                                        : pk.status === "HALF WIN"
+                                        ? "border-cyan-500/40 bg-cyan-500/15 text-cyan-300"
+                                        : pk.status === "LOSS"
+                                        ? "border-rose-500/40 bg-rose-500/15 text-rose-300"
+                                        : pk.status === "PUSH"
+                                        ? "border-slate-600 bg-slate-800 text-slate-300"
+                                        : "border-amber-500/40 bg-amber-500/10 text-amber-300";
+                                    return (
+                                      <tr
+                                        key={`${pk.date}-${pk.home}-${pk.away}-${idx}`}
+                                        className="hover:bg-slate-800/25"
+                                      >
+                                        <td className="px-3 py-2 font-sans text-slate-200">
+                                          <div className="font-medium text-white">
+                                            {pk.home}{" "}
+                                            <span className="text-slate-500">
+                                              vs
+                                            </span>{" "}
+                                            {pk.away}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400">
+                                            {pk.date.slice(0, 10)} · {pk.league}{" "}
+                                            ·{" "}
+                                            <span className="text-cyan-300">
+                                              {pk.market}
+                                              {pk.selection_side
+                                                ? ` [${pk.selection_side}]`
+                                                : ""}
+                                            </span>
+                                          </div>
+                                        </td>
+                                        <td className="px-2.5 py-2 text-center text-slate-300">
+                                          {pk.score || "—"}
+                                        </td>
+                                        <td className="px-2.5 py-2 text-end text-emerald-300">
+                                          {pk.min_odds !== null
+                                            ? `≥ ${pk.min_odds.toFixed(2)}`
+                                            : "—"}
+                                        </td>
+                                        <td className="px-2.5 py-2 text-end text-cyan-300">
+                                          {pk.closing_odds !== null
+                                            ? pk.closing_odds.toFixed(2)
+                                            : "—"}
+                                        </td>
+                                        <td className="px-2.5 py-2 text-end text-slate-300">
+                                          {(pk.stake_pct * 100).toFixed(2)}%
+                                        </td>
+                                        <td className="px-2.5 py-2 text-center">
+                                          <span
+                                            className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${stColor}`}
+                                          >
+                                            {pk.status}
+                                          </span>
+                                        </td>
+                                        <td
+                                          className={`px-3 py-2 text-end font-semibold ${
+                                            pk.conservative_kelly_pnl_pct ===
+                                            null
+                                              ? "text-slate-500"
+                                              : pk.conservative_kelly_pnl_pct > 0
+                                              ? "text-emerald-400"
+                                              : pk.conservative_kelly_pnl_pct < 0
+                                              ? "text-rose-400"
+                                              : "text-slate-300"
+                                          }`}
+                                        >
+                                          {pk.conservative_kelly_pnl_pct !== null
+                                            ? `${pk.conservative_kelly_pnl_pct > 0 ? "+" : ""}${(
+                                                pk.conservative_kelly_pnl_pct *
+                                                riskMultiplier
+                                              ).toFixed(2)}%`
+                                            : "—"}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </section>
   );

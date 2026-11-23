@@ -85,6 +85,46 @@ export interface Dictionary {
   footerDisclaimer: string;
   footerRepoLink: string;
   footerTelegramLink: string;
+  // Live Weekly P&L Banner
+  weeklyBannerTitle: string;
+  weeklyWindowRule: string;
+  currentWeekLabel: string;
+  lastArchivedWeekLabel: string;
+  weekStatusProfit: string;
+  weekStatusLoss: string;
+  weekStatusPending: string;
+  weekStatusBreakeven: string;
+  noArchivedWeekYet: string;
+  minOddsBasisNote: string;
+  flatUnitsLabel: string;
+  minOddsRoiLabel: string;
+  closingRoiLabel: string;
+  // Execute Pick Dropdown
+  executePickBtn: string;
+  executeDropdownHeader: string;
+  executeMinOddsReminder: string;
+  // Weekly Transparency Archive Table
+  weeklyArchiveTitle: string;
+  weeklyArchiveSubtitle: string;
+  weeklyArchiveEmpty: string;
+  colMatchweek: string;
+  colWindowStatus: string;
+  colRecord: string;
+  colKellyChange: string;
+  colMinOddsRoi: string;
+  colFlatUnits: string;
+  colClosingRoi: string;
+  colDetails: string;
+  badgeClosedArchived: string;
+  badgeActiveWeek: string;
+  viewPicksBtn: string;
+  hidePicksBtn: string;
+  pickColMatch: string;
+  pickColScore: string;
+  pickColOdds: string;
+  pickColClosing: string;
+  pickColStake: string;
+  pickColPnl: string;
 }
 
 export const DICTIONARIES: Record<Locale, Dictionary> = {
@@ -182,6 +222,46 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
       "For quantitative research and informational analysis only. Past out-of-sample performance does not guarantee future returns. Bet responsibly.",
     footerRepoLink: "Backend Engine (GitHub)",
     footerTelegramLink: "Join Telegram Alerts Bot",
+    weeklyBannerTitle: "Live Weekly P&L · Matchweek Transparency",
+    weeklyWindowRule: "Matchweek Window: Tue 00:00 UTC – Mon 23:59 UTC",
+    currentWeekLabel: "Current Matchweek",
+    lastArchivedWeekLabel: "Last Closed & Archived Week",
+    weekStatusProfit: "PROFIT",
+    weekStatusLoss: "LOSS",
+    weekStatusPending: "PENDING",
+    weekStatusBreakeven: "BREAKEVEN",
+    noArchivedWeekYet: "Awaiting completion of first v4 matchweek",
+    minOddsBasisNote:
+      "Conservative Floor Accounting: P&L is valued strictly at Min Acceptable Odds (+6% EV floor), weighted by your Kelly bankroll stake.",
+    flatUnitsLabel: "Flat 1u",
+    minOddsRoiLabel: "Min-Odds ROI",
+    closingRoiLabel: "Closing ROI",
+    executePickBtn: "Execute Pick ↗",
+    executeDropdownHeader: "Global Sportsbooks",
+    executeMinOddsReminder: "Only enter if odds ≥",
+    weeklyArchiveTitle: "Weekly Transparency Archive",
+    weeklyArchiveSubtitle:
+      "Permanent Tue–Mon UTC matchweek audit ledger. Once every fixture in a matchweek settles, it locks automatically as CLOSED_ARCHIVED with full match-level P&L.",
+    weeklyArchiveEmpty:
+      "Active matchweek is currently in progress. Completed matchweeks will lock and appear here permanently.",
+    colMatchweek: "Matchweek (Tue–Mon)",
+    colWindowStatus: "Archive State",
+    colRecord: "Record",
+    colKellyChange: "Kelly P&L",
+    colMinOddsRoi: "Min-Odds ROI",
+    colFlatUnits: "Flat 1u",
+    colClosingRoi: "Closing ROI",
+    colDetails: "Picks",
+    badgeClosedArchived: "CLOSED_ARCHIVED",
+    badgeActiveWeek: "ACTIVE",
+    viewPicksBtn: "Inspect",
+    hidePicksBtn: "Hide",
+    pickColMatch: "Fixture & Market",
+    pickColScore: "Score",
+    pickColOdds: "Min Odds",
+    pickColClosing: "Closing",
+    pickColStake: "Stake",
+    pickColPnl: "Kelly P&L",
   },
   ar: {
     dir: "rtl",
@@ -277,6 +357,46 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
       "لأغراض البحث الكمي والتحليل المعلوماتي فقط. الأداء التاريخي خارج العينة لا يضمن عوائد مستقبلية مماثلة.",
     footerRepoLink: "مستودع المحرك الخلفي (GitHub)",
     footerTelegramLink: "الاشتراك في بوت تنبيهات تيليغرام",
+    weeklyBannerTitle: "شريط الشفافية الأسبوعية · أرباح وخسائر الجولة الحية",
+    weeklyWindowRule: "نافذة الجولة الكروية: الثلاثاء 00:00 UTC – الاثنين 23:59 UTC",
+    currentWeekLabel: "الجولة الجارية",
+    lastArchivedWeekLabel: "آخر أسبوع منتهٍ ومؤرشف",
+    weekStatusProfit: "ربح",
+    weekStatusLoss: "خسارة",
+    weekStatusPending: "قيد التنفيذ",
+    weekStatusBreakeven: "تعادل",
+    noArchivedWeekYet: "بانتظار اكتمال أول جولة تحت معايير النسخة الرابعة v4",
+    minOddsBasisNote:
+      "محاسبة متحفظة شفافة: جميع أرقام الربح والخسارة محسوبة على الحد الأدنى المقبول للسعر (Min Odds) وموزونة بحصة Kelly وفق رأس مالك المدخل.",
+    flatUnitsLabel: "ثابت 1u",
+    minOddsRoiLabel: "عائد Min Odds",
+    closingRoiLabel: "عائد الإغلاق",
+    executePickBtn: "تنفيذ الصفقة ↗",
+    executeDropdownHeader: "المنصات العالمية المعتمدة",
+    executeMinOddsReminder: "ادخل فقط إذا كان السعر ≥",
+    weeklyArchiveTitle: "جدول الأرشيف الأسبوعي المفتوح (Weekly Transparency Archive)",
+    weeklyArchiveSubtitle:
+      "سجل تدقيق دائم لكل جولة كروية (الثلاثاء–الاثنين UTC). بمجرد تسوية آخر مباراة في الجولة، تُغلق تلقائياً بحالة CLOSED_ARCHIVED مع حفظ تفاصيل كل صفقة.",
+    weeklyArchiveEmpty:
+      "الجولة الجارية لا تزال نشطة. ستُحفظ جميع الجولات المكتملة هنا بشكل دائم ومفتوح للتدقيق.",
+    colMatchweek: "نافذة الجولة",
+    colWindowStatus: "حالة الأرشفة",
+    colRecord: "الحصيلة",
+    colKellyChange: "صافي Kelly",
+    colMinOddsRoi: "عائد Min Odds",
+    colFlatUnits: "وحدات 1u",
+    colClosingRoi: "عائد الإغلاق",
+    colDetails: "الصفقات",
+    badgeClosedArchived: "CLOSED_ARCHIVED",
+    badgeActiveWeek: "نشط",
+    viewPicksBtn: "التفاصيل",
+    hidePicksBtn: "إخفاء",
+    pickColMatch: "المباراة والسوق",
+    pickColScore: "النتيجة",
+    pickColOdds: "Min Odds",
+    pickColClosing: "الإغلاق",
+    pickColStake: "الحصة",
+    pickColPnl: "صافي Kelly",
   },
   fr: {
     dir: "ltr",
@@ -372,5 +492,45 @@ export const DICTIONARIES: Record<Locale, Dictionary> = {
       "À des fins de recherche quantitative et d'analyse uniquement. Les performances passées ne garantissent pas les résultats futurs.",
     footerRepoLink: "Moteur Backend (GitHub)",
     footerTelegramLink: "Rejoindre le Bot Telegram",
+    weeklyBannerTitle: "P&L Hebdomadaire Live · Transparence Journée",
+    weeklyWindowRule: "Fenêtre Journée : Mar 00:00 UTC – Lun 23:59 UTC",
+    currentWeekLabel: "Journée en Cours",
+    lastArchivedWeekLabel: "Dernière Semaine Clôturée",
+    weekStatusProfit: "PROFIT",
+    weekStatusLoss: "PERTE",
+    weekStatusPending: "EN ATTENTE",
+    weekStatusBreakeven: "ÉQUILIBRE",
+    noArchivedWeekYet: "En attente de la première journée v4 clôturée",
+    minOddsBasisNote:
+      "Comptabilité prudente : P&L calculé sur la Cote Minimale Requise (+6% EV), pondéré Kelly selon votre capital saisi.",
+    flatUnitsLabel: "Fixe 1u",
+    minOddsRoiLabel: "ROI Cote Min",
+    closingRoiLabel: "ROI Clôture",
+    executePickBtn: "Exécuter ↗",
+    executeDropdownHeader: "Bookmakers Mondiaux",
+    executeMinOddsReminder: "Entrez uniquement si cote ≥",
+    weeklyArchiveTitle: "Archive Hebdomadaire Transparente",
+    weeklyArchiveSubtitle:
+      "Journal d'audit permanent par journée (Mar–Lun UTC). Dès que tous les matchs d'une journée sont réglés, elle est verrouillée en CLOSED_ARCHIVED.",
+    weeklyArchiveEmpty:
+      "La journée actuelle est en cours. Les journées clôturées apparaîtront ici de manière permanente.",
+    colMatchweek: "Journée (Mar–Lun)",
+    colWindowStatus: "Statut Archive",
+    colRecord: "Bilan",
+    colKellyChange: "P&L Kelly",
+    colMinOddsRoi: "ROI Cote Min",
+    colFlatUnits: "Fixe 1u",
+    colClosingRoi: "ROI Clôture",
+    colDetails: "Paris",
+    badgeClosedArchived: "CLOSED_ARCHIVED",
+    badgeActiveWeek: "ACTIF",
+    viewPicksBtn: "Détails",
+    hidePicksBtn: "Masquer",
+    pickColMatch: "Match & Marché",
+    pickColScore: "Score",
+    pickColOdds: "Cote Min",
+    pickColClosing: "Clôture",
+    pickColStake: "Mise",
+    pickColPnl: "P&L Kelly",
   },
 };

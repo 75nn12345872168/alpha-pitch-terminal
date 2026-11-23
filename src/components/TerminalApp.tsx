@@ -1,16 +1,19 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Archive,
   ArrowUpRight,
   Calculator,
   Check,
+  ChevronDown,
   Clock,
   Copy,
   ExternalLink,
   Filter,
   Globe,
+  Info,
   Send,
   Share2,
   Shield,
@@ -18,8 +21,13 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import type { PredictionSignal, TerminalBundle } from "@/lib/types";
+import type {
+  PredictionSignal,
+  TerminalBundle,
+  WeeklyPerformanceEntry,
+} from "@/lib/types";
 import { DICTIONARIES, type Locale } from "@/lib/i18n";
+import { GLOBAL_BOOKMAKERS } from "@/config/bookmakers";
 import { AuditSection } from "./AuditSection";
 
 const TELEGRAM_BOT_URL = "https://t.me/mom123_daily_bot";
@@ -66,9 +74,35 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
   );
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [openBookmakerId, setOpenBookmakerId] = useState<string | null>(null);
+  const signalsGridRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (
+        signalsGridRef.current &&
+        !signalsGridRef.current.contains(e.target as Node)
+      ) {
+        setOpenBookmakerId(null);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenBookmakerId(null);
+    };
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, []);
 
   const t = DICTIONARIES[locale];
-  const { predictions, performance, backtest, dataSource } = bundle;
+  const { predictions, performance, backtest, weeklyArchive, dataSource } = bundle;
+  const transparencyBanner =
+    predictions.transparency_banner ??
+    weeklyArchive?.transparency_banner ??
+    performance.transparency_banner;
 
   const leaguesInSlate = useMemo(() => {
     return Array.from(
@@ -164,6 +198,60 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
 
   const profBest = backtest.profitable_selection_best_market;
   const profPin = backtest.profitable_selection_pinnacle;
+
+  const renderWeekStatusBadge = (status: string) => {
+    const up = status.toUpperCase();
+    if (up === "PROFIT") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-emerald-300">
+          <TrendingUp className="h-3 w-3" />
+          {t.weekStatusProfit}
+        </span>
+      );
+    }
+    if (up === "LOSS") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-rose-300">
+          <TrendingDown className="h-3 w-3" />
+          {t.weekStatusLoss}
+        </span>
+      );
+    }
+    if (up === "BREAKEVEN") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-800 px-2.5 py-0.5 font-mono text-[10px] font-bold text-slate-300">
+          {t.weekStatusBreakeven}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-amber-300">
+        <Clock className="h-3 w-3" />
+        {t.weekStatusPending}
+      </span>
+    );
+  };
+
+  const renderWeekPnlValues = (wk: WeeklyPerformanceEntry) => {
+    const scaledPct = wk.kelly_bankroll_change_pct * riskMultiplier;
+    const scaledUsd = safeBankroll * (scaledPct / 100);
+    const sign = scaledPct > 0 ? "+" : scaledPct < 0 ? "-" : "";
+    const absUsd = Math.abs(scaledUsd);
+    const absPct = Math.abs(scaledPct);
+    const color =
+      wk.settled_picks === 0
+        ? "text-amber-300"
+        : scaledPct > 0
+        ? "text-emerald-400"
+        : scaledPct < 0
+        ? "text-rose-400"
+        : "text-slate-200";
+    return {
+      usdLabel: `${sign}$${absUsd.toFixed(2)}`,
+      pctLabel: `${sign}${absPct.toFixed(2)}%`,
+      color,
+    };
+  };
 
   return (
     <div
@@ -567,12 +655,184 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
             </div>
           </div>
 
+          {/* Live Weekly P&L Transparency Banner */}
+          {transparencyBanner && (
+            <div className="rounded-2xl border border-slate-800/90 bg-gradient-to-br from-[#111827] via-[#0e1526] to-[#090D16] p-4 shadow-xl sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                  <Shield className="h-4 w-4 text-emerald-400" />
+                  <span>{t.weeklyBannerTitle}</span>
+                </div>
+                <span className="rounded-md border border-slate-700/80 bg-[#090D16] px-2.5 py-1 font-mono text-[10px] text-slate-400">
+                  {t.weeklyWindowRule}
+                </span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {/* Current Matchweek Card */}
+                {transparencyBanner.current_week && (() => {
+                  const cur = transparencyBanner.current_week;
+                  const pnl = renderWeekPnlValues(cur);
+                  return (
+                    <div className="rounded-xl border border-slate-800 bg-[#090D16]/90 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                            {t.currentWeekLabel}
+                          </div>
+                          <div className="mt-0.5 font-mono text-xs text-slate-300 tabular-nums">
+                            {cur.label}
+                          </div>
+                        </div>
+                        {renderWeekStatusBadge(cur.status)}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
+                        <div className="flex items-baseline gap-2.5 font-mono tabular-nums">
+                          <span className={`text-2xl font-bold ${pnl.color}`}>
+                            {cur.settled_picks > 0 ? pnl.usdLabel : "$0.00"}
+                          </span>
+                          <span className={`text-sm font-semibold ${pnl.color}`}>
+                            ({cur.settled_picks > 0 ? pnl.pctLabel : "0.00%"})
+                          </span>
+                        </div>
+                        <div className="font-mono text-xs text-slate-400 tabular-nums">
+                          {cur.wins}W · {cur.half_wins}HW · {cur.losses}L
+                          {cur.pushes > 0 ? ` · ${cur.pushes}P` : ""} ·{" "}
+                          <span className="text-amber-300">
+                            {cur.pending_picks} {t.weekStatusPending}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-800/80 pt-2.5 font-mono text-[11px] text-slate-400 tabular-nums">
+                        <span className="rounded bg-slate-900 px-2 py-0.5">
+                          {t.minOddsRoiLabel}:{" "}
+                          <strong className="text-slate-200">
+                            {cur.conservative_min_odds_roi_pct !== null
+                              ? `${cur.conservative_min_odds_roi_pct > 0 ? "+" : ""}${cur.conservative_min_odds_roi_pct.toFixed(2)}%`
+                              : "—"}
+                          </strong>
+                        </span>
+                        <span className="rounded bg-slate-900 px-2 py-0.5">
+                          {t.flatUnitsLabel}:{" "}
+                          <strong className="text-slate-200">
+                            {cur.settled_picks > 0
+                              ? `${cur.flat_net_units > 0 ? "+" : ""}${cur.flat_net_units.toFixed(2)}u`
+                              : "0.00u"}
+                          </strong>
+                        </span>
+                        {cur.closing_odds_roi_pct !== null && (
+                          <span className="rounded bg-slate-900 px-2 py-0.5">
+                            {t.closingRoiLabel}:{" "}
+                            <strong className="text-cyan-300">
+                              {cur.closing_odds_roi_pct > 0 ? "+" : ""}
+                              {cur.closing_odds_roi_pct.toFixed(2)}%
+                            </strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Last Closed & Archived Matchweek Card */}
+                <div className="rounded-xl border border-slate-800 bg-[#090D16]/90 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                        <Archive className="h-3.5 w-3.5 text-cyan-400" />
+                        <span>{t.lastArchivedWeekLabel}</span>
+                      </div>
+                      <div className="mt-0.5 font-mono text-xs text-slate-300 tabular-nums">
+                        {transparencyBanner.last_closed_week
+                          ? transparencyBanner.last_closed_week.label
+                          : "—"}
+                      </div>
+                    </div>
+                    {transparencyBanner.last_closed_week ? (
+                      renderWeekStatusBadge(
+                        transparencyBanner.last_closed_week.status
+                      )
+                    ) : (
+                      <span className="rounded-full border border-slate-700 bg-slate-800/80 px-2.5 py-0.5 font-mono text-[10px] font-semibold text-slate-400">
+                        {t.badgeClosedArchived}: 0
+                      </span>
+                    )}
+                  </div>
+
+                  {transparencyBanner.last_closed_week ? (() => {
+                    const last = transparencyBanner.last_closed_week;
+                    const pnl = renderWeekPnlValues(last);
+                    return (
+                      <>
+                        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-3">
+                          <div className="flex items-baseline gap-2.5 font-mono tabular-nums">
+                            <span className={`text-2xl font-bold ${pnl.color}`}>
+                              {pnl.usdLabel}
+                            </span>
+                            <span
+                              className={`text-sm font-semibold ${pnl.color}`}
+                            >
+                              ({pnl.pctLabel})
+                            </span>
+                          </div>
+                          <div className="font-mono text-xs text-slate-400 tabular-nums">
+                            {last.wins}W · {last.half_wins}HW · {last.losses}L
+                            {last.pushes > 0 ? ` · ${last.pushes}P` : ""}
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-800/80 pt-2.5 font-mono text-[11px] text-slate-400 tabular-nums">
+                          <span className="rounded bg-slate-900 px-2 py-0.5">
+                            {t.minOddsRoiLabel}:{" "}
+                            <strong className="text-slate-200">
+                              {last.conservative_min_odds_roi_pct !== null
+                                ? `${last.conservative_min_odds_roi_pct > 0 ? "+" : ""}${last.conservative_min_odds_roi_pct.toFixed(2)}%`
+                                : "—"}
+                            </strong>
+                          </span>
+                          <span className="rounded bg-slate-900 px-2 py-0.5">
+                            {t.flatUnitsLabel}:{" "}
+                            <strong className="text-slate-200">
+                              {last.flat_net_units > 0 ? "+" : ""}
+                              {last.flat_net_units.toFixed(2)}u
+                            </strong>
+                          </span>
+                          <span className="rounded bg-slate-900 px-2 py-0.5">
+                            {t.closingRoiLabel}:{" "}
+                            <strong className="text-cyan-300">
+                              {last.closing_odds_roi_pct !== null
+                                ? `${last.closing_odds_roi_pct > 0 ? "+" : ""}${last.closing_odds_roi_pct.toFixed(2)}%`
+                                : "—"}
+                            </strong>
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })() : (
+                    <div className="mt-4 rounded-lg border border-dashed border-slate-800 bg-slate-900/40 px-3 py-3 text-xs text-slate-400">
+                      {t.noArchivedWeekYet}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-start gap-2 text-[11px] text-slate-400">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-400" />
+                <span>{t.minOddsBasisNote}</span>
+              </div>
+            </div>
+          )}
+
           {filteredSignals.length === 0 ? (
             <div className="rounded-2xl border border-slate-800 bg-[#111827]/80 p-10 text-center text-sm text-slate-400">
               {t.noSignals}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div
+              ref={signalsGridRef}
+              className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+            >
               {filteredSignals.map((sig, idx) => {
                 const probPct = sig.p_calibrated * 100;
                 const minOdds = sig.min_odds ?? sig.market_odds;
@@ -684,8 +944,8 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                       </div>
                     </div>
 
-                    {/* Footer: Dynamic Kelly Stake + Copy */}
-                    <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-3.5">
+                    {/* Footer: Dynamic Kelly Stake + Copy + Execute Pick Dropdown */}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80 pt-3.5">
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-slate-400">
                           {t.suggestedStake}
@@ -700,20 +960,81 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleCopySignal(sig, idx)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-[#090D16] px-2.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-emerald-500/50 hover:text-emerald-300"
-                      >
-                        {copiedId === cardId ? (
-                          <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
+                      <div className="relative flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleCopySignal(sig, idx)}
+                          title={t.copySignal}
+                          className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-[#090D16] px-2.5 py-1.5 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+                        >
+                          {copiedId === cardId ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
+                          )}
+                          <span className="hidden sm:inline">
+                            {copiedId === cardId ? t.copiedSignal : t.copySignal}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          aria-expanded={openBookmakerId === cardId}
+                          onClick={() =>
+                            setOpenBookmakerId((prev) =>
+                              prev === cardId ? null : cardId
+                            )
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25 hover:text-emerald-200"
+                        >
+                          <span>{t.executePickBtn}</span>
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition-transform ${
+                              openBookmakerId === cardId ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+
+                        {openBookmakerId === cardId && (
+                          <div
+                            className={`absolute bottom-full z-30 mb-2 w-64 rounded-xl border border-slate-700/90 bg-[#0B1120] p-2 shadow-2xl shadow-black/70 ${
+                              t.dir === "rtl" ? "left-0" : "right-0"
+                            }`}
+                          >
+                            <div className="rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-2.5 py-1.5 text-[11px] font-medium text-emerald-300">
+                              {t.executeMinOddsReminder}{" "}
+                              <span className="font-mono font-bold tabular-nums">
+                                {minOdds.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="mt-2 px-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                              {t.executeDropdownHeader}
+                            </div>
+                            <div className="mt-1 space-y-1">
+                              {GLOBAL_BOOKMAKERS.map((bm) => (
+                                <a
+                                  key={bm.id}
+                                  href={bm.affiliateUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => setOpenBookmakerId(null)}
+                                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs transition hover:bg-slate-800/80"
+                                >
+                                  <div>
+                                    <div className="font-semibold text-white">
+                                      {bm.name}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400">
+                                      {bm.tag}
+                                    </div>
+                                  </div>
+                                  <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                                </a>
+                              ))}
+                            </div>
+                          </div>
                         )}
-                        <span>
-                          {copiedId === cardId ? t.copiedSignal : t.copySignal}
-                        </span>
-                      </button>
+                      </div>
                     </div>
                   </article>
                 );
@@ -732,7 +1053,9 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
         <AuditSection
           backtest={backtest}
           performance={performance}
+          weeklyArchive={weeklyArchive}
           bankroll={safeBankroll}
+          riskMultiplier={riskMultiplier}
           t={t}
         />
       </main>

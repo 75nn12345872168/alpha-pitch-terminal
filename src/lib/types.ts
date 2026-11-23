@@ -5,6 +5,7 @@ export interface ExpectedGoals {
 
 export interface PredictionSignal {
   date: string;
+  matchweek_id?: string;
   league: string;
   home: string;
   away: string;
@@ -20,6 +21,72 @@ export interface PredictionSignal {
   expected_goals: ExpectedGoals;
 }
 
+export interface WeeklyPickRecord {
+  date: string;
+  league: string;
+  home: string;
+  away: string;
+  market: string;
+  selection_side: string;
+  calibrated_prob: number | null;
+  min_odds: number | null;
+  market_odds: number | null;
+  closing_odds: number | null;
+  stake_pct: number;
+  status: "WIN" | "HALF WIN" | "LOSS" | "PUSH" | "PENDING" | string;
+  score: string;
+  conservative_kelly_pnl_pct: number | null;
+  flat_pnl_units: number | null;
+}
+
+export interface WeeklyPerformanceEntry {
+  matchweek_id: string;
+  window_start: string;
+  window_end: string;
+  window_start_utc?: string;
+  window_end_utc?: string;
+  label: string;
+  closed_at: string | null;
+  archive_status: "CLOSED_ARCHIVED" | "ACTIVE" | string;
+  status: "PROFIT" | "LOSS" | "BREAKEVEN" | "PENDING" | string;
+  total_picks: number;
+  settled_picks: number;
+  pending_picks: number;
+  wins: number;
+  half_wins: number;
+  losses: number;
+  pushes: number;
+  hit_rate_percent: number;
+  total_staked_pct: number;
+  conservative_min_odds_roi_pct: number | null;
+  kelly_bankroll_change_pct: number;
+  flat_net_units: number;
+  flat_roi_pct: number | null;
+  closing_odds_roi_pct: number | null;
+  closing_odds_sample_n?: number;
+  picks?: WeeklyPickRecord[];
+}
+
+export interface TransparencyBannerData {
+  valuation_basis: string;
+  matchweek_window_rule: string;
+  current_week: WeeklyPerformanceEntry | null;
+  last_closed_week: WeeklyPerformanceEntry | null;
+  closed_weeks_count: number;
+}
+
+export interface WeeklyArchiveData {
+  generated_at: string;
+  engine_version: string;
+  matchweek_window_rule: string;
+  valuation_basis: string;
+  total_weeks: number;
+  closed_weeks_count: number;
+  active_weeks_count: number;
+  transparency_banner: TransparencyBannerData;
+  weeks: WeeklyPerformanceEntry[];
+}
+
 export interface MleEntry {
   mu_home: number;
   mu_away: number;
@@ -31,6 +98,7 @@ export interface MleEntry {
 export interface PredictionsLatestData {
   generated_at: string;
   engine_version: string;
+  transparency_banner?: TransparencyBannerData;
   min_confidence_pct: number;
   dnb_min_confidence_pct?: number;
   safety_margin_pct: number;
@@ -74,7 +142,11 @@ export interface BreakdownRecord {
 export interface PerformanceSummaryData {
   generated_at: string;
   engine_version: string;
+  matchweek_window_rule?: string;
+  valuation_basis?: string;
   approved_production_pairs: [string, string][];
+  transparency_banner?: TransparencyBannerData;
+  weekly_performance?: WeeklyPerformanceEntry[];
   settlement: SettlementStats;
   breakdown_by_league: Record<string, BreakdownRecord>;
   breakdown_by_market: Record<string, BreakdownRecord>;
@@ -139,6 +211,7 @@ export interface TerminalBundle {
   predictions: PredictionsLatestData;
   performance: PerformanceSummaryData;
   backtest: BacktestVerifiedStatsData;
+  weeklyArchive: WeeklyArchiveData;
   dataSource: "github-live" | "local-fallback";
   fetchedAt: string;
 }

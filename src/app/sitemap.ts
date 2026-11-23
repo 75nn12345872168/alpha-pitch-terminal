@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://alpha-pitch-terminal.vercel.app";
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || "https://alpha-pitch-terminal.vercel.app"
+  ).replace(/\/$/, "");
   return [
     {
-      url: baseUrl,
+      url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: "hourly",
       priority: 1.0,

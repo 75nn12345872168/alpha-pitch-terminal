@@ -70,6 +70,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google: "RuIOvIJ1RRQcVh1oztObRVEb7X4RUnA3oTS2-3DHvnA",
+  },
   other: {
     google: "notranslate",
   },

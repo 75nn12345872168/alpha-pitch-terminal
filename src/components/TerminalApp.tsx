@@ -29,6 +29,7 @@ import type {
 import { DICTIONARIES, type Locale } from "@/lib/i18n";
 import {
   BOOKMAKER_CATEGORIES,
+  GLOBAL_BOOKMAKERS,
   type BookmakerConfig,
 } from "@/config/bookmakers";
 import { AuditSection } from "./AuditSection";
@@ -49,6 +50,20 @@ function formatUtcStamp(iso: string): string {
   } catch {
     return iso;
   }
+}
+
+function matchesLiveBookmaker(
+  bm: BookmakerConfig,
+  liveName?: string | null
+): boolean {
+  if (!liveName) return false;
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const l = norm(liveName);
+  const b = norm(bm.name);
+  if (!l || !b) return false;
+  if (l === b) return true;
+  if (bm.id === "betfair-exchange" && l.includes("betfair")) return true;
+  return l.includes(b) || b.includes(l);
 }
 
 export function TerminalApp({ bundle }: TerminalAppProps) {
@@ -1141,61 +1156,115 @@ export function TerminalApp({ bundle }: TerminalAppProps) {
                         />
                       </button>
 
-                      {isMenuOpen && (
-                        <div
-                          className={`absolute bottom-full z-30 mb-2 w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-white/15 bg-[#0B0F19]/95 p-2.5 shadow-2xl shadow-black/80 backdrop-blur-xl ${
-                            t.dir === "rtl" ? "left-0" : "right-0"
-                          }`}
-                        >
-                          <div className="rounded-lg border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1.5 text-[11px] font-medium text-emerald-300">
-                            {t.executeMinOddsReminder}{" "}
-                            <span className="font-mono font-bold tabular-nums">
-                              {minOdds.toFixed(2)}
-                            </span>
-                          </div>
+                      {isMenuOpen && (() => {
+                        const matchedBestBm =
+                          hasLiveOdds &&
+                          liveBestOdds !== null &&
+                          sig.live_best_bookmaker
+                            ? GLOBAL_BOOKMAKERS.find((bm) =>
+                                matchesLiveBookmaker(
+                                  bm,
+                                  sig.live_best_bookmaker
+                                )
+                              ) ?? null
+                            : null;
 
-                          <div className="mt-2.5 space-y-2.5">
-                            {BOOKMAKER_CATEGORIES.map((group, gIdx) => (
-                              <div
-                                key={group.id}
-                                className={
-                                  gIdx > 0
-                                    ? "border-t border-white/10 pt-2.5"
-                                    : ""
-                                }
-                              >
-                                <div className="px-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                                  {group.id === "global-crypto"
-                                    ? t.bookmakerCatGlobalCrypto
-                                    : t.bookmakerCatEuLicensed}
-                                </div>
-                                <div className="mt-1 space-y-1">
-                                  {group.items.map((bm) => (
-                                    <button
-                                      key={bm.id}
-                                      type="button"
-                                      onClick={() =>
-                                        handleExecuteBookmaker(sig, bm)
-                                      }
-                                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-start text-xs transition-all duration-150 hover:bg-white/[0.06]"
-                                    >
-                                      <div className="min-w-0">
-                                        <div className="font-semibold text-white">
-                                          {bm.name}
-                                        </div>
-                                        <div className="truncate font-mono text-[10px] text-slate-400">
-                                          {bm.tag}
-                                        </div>
-                                      </div>
-                                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" />
-                                    </button>
-                                  ))}
-                                </div>
+                        return (
+                          <div
+                            className={`absolute bottom-full z-30 mb-2 w-72 max-w-[calc(100vw-3rem)] rounded-xl border border-white/15 bg-[#0B0F19]/95 p-2.5 shadow-2xl shadow-black/80 backdrop-blur-xl ${
+                              t.dir === "rtl" ? "left-0" : "right-0"
+                            }`}
+                          >
+                            <div className="rounded-lg border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1.5 text-[11px] font-medium text-emerald-300">
+                              {t.executeMinOddsReminder}{" "}
+                              <span className="font-mono font-bold tabular-nums">
+                                {minOdds.toFixed(2)}
+                              </span>
+                            </div>
+
+                            {matchedBestBm && liveBestOdds !== null && (
+                              <div className="mt-2.5 border-b border-white/10 pb-2.5">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleExecuteBookmaker(sig, matchedBestBm)
+                                  }
+                                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-emerald-500/45 bg-emerald-500/15 px-2.5 py-2 text-start text-xs transition-all duration-150 hover:border-emerald-400 hover:bg-emerald-500/25"
+                                >
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <span className="font-bold text-white">
+                                        {matchedBestBm.name}
+                                      </span>
+                                      <span className="rounded border border-emerald-400/50 bg-emerald-500/25 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-emerald-200">
+                                        BEST LIVE ODDS
+                                      </span>
+                                    </div>
+                                    <div className="mt-0.5 truncate font-mono text-[10px] text-emerald-200/80">
+                                      {matchedBestBm.tag}
+                                    </div>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-1.5">
+                                    <span className="font-mono text-sm font-bold text-emerald-300 tabular-nums">
+                                      {liveBestOdds.toFixed(2)}
+                                    </span>
+                                    <ExternalLink className="h-3.5 w-3.5 text-emerald-300" />
+                                  </div>
+                                </button>
                               </div>
-                            ))}
+                            )}
+
+                            <div className="mt-2.5 space-y-2.5">
+                              {BOOKMAKER_CATEGORIES.map((group, gIdx) => {
+                                const visibleItems = matchedBestBm
+                                  ? group.items.filter(
+                                      (bm) => bm.id !== matchedBestBm.id
+                                    )
+                                  : group.items;
+                                if (visibleItems.length === 0) return null;
+                                return (
+                                  <div
+                                    key={group.id}
+                                    className={
+                                      gIdx > 0
+                                        ? "border-t border-white/10 pt-2.5"
+                                        : ""
+                                    }
+                                  >
+                                    <div className="px-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                      {group.id === "global-crypto"
+                                        ? t.bookmakerCatGlobalCrypto
+                                        : t.bookmakerCatEuLicensed}
+                                    </div>
+                                    <div className="mt-1 space-y-1">
+                                      {visibleItems.map((bm) => (
+                                        <button
+                                          key={bm.id}
+                                          type="button"
+                                          onClick={() =>
+                                            handleExecuteBookmaker(sig, bm)
+                                          }
+                                          className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-start text-xs transition-all duration-150 hover:bg-white/[0.06]"
+                                        >
+                                          <div className="min-w-0">
+                                            <div className="font-semibold text-white">
+                                              {bm.name}
+                                            </div>
+                                            <div className="truncate font-mono text-[10px] text-slate-400">
+                                              {bm.tag}
+                                            </div>
+                                          </div>
+                                          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </article>
                 );

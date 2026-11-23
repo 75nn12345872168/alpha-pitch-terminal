@@ -48,8 +48,6 @@ export function PerformanceChart({
       }));
   }, [backtest]);
 
-  // Verified 2019-2026 cumulative equity projection anchored strictly to backtest
-  // endpoints (Flat 1u +60.25u on 100u = +60.25%, Fractional Kelly 0.25x -> 1003.44u)
   const equityCurveData = useMemo(() => {
     const base = Math.max(100, bankroll || 1000);
     const flatFinalRatio =
@@ -59,7 +57,6 @@ export function PerformanceChart({
     const kellyEndRatio =
       backtest.profitable_selection_best_market.kelly_bankroll_end / 100;
 
-    // 8 OOS season milestones (2019..2026) interpolated cleanly to exact audited endpoints
     const milestones = [
       { season: "Start", frac: 0.0, kFrac: 0.0 },
       { season: "2019", frac: 0.11, kFrac: 0.06 },
@@ -86,19 +83,21 @@ export function PerformanceChart({
   }, [backtest, bankroll]);
 
   return (
-    <div className="rounded-2xl border border-slate-800/80 bg-[#111827]/90 p-5 shadow-xl">
+    <div className="rounded-2xl border border-white/10 bg-[#0B0F19]/80 p-5 shadow-xl backdrop-blur-md sm:p-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-base font-semibold text-white">{t.chartTitle}</h3>
-          <p className="mt-0.5 text-xs text-slate-400">{t.chartSubtitle}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            {t.chartSubtitle}
+          </p>
         </div>
-        <div className="inline-flex rounded-lg border border-slate-700/70 bg-[#090D16] p-1 text-xs">
+        <div className="inline-flex shrink-0 rounded-lg border border-white/10 bg-[#090D16] p-1 text-xs">
           <button
             type="button"
             onClick={() => setChartTab("markets")}
-            className={`rounded-md px-3 py-1.5 font-medium transition ${
+            className={`rounded-md px-3 py-1.5 font-medium transition-all duration-200 ${
               chartTab === "markets"
-                ? "bg-emerald-500/20 text-emerald-300 shadow-sm"
+                ? "bg-emerald-500/20 text-emerald-300"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -107,9 +106,9 @@ export function PerformanceChart({
           <button
             type="button"
             onClick={() => setChartTab("equity")}
-            className={`rounded-md px-3 py-1.5 font-medium transition ${
+            className={`rounded-md px-3 py-1.5 font-medium transition-all duration-200 ${
               chartTab === "equity"
-                ? "bg-cyan-500/20 text-cyan-300 shadow-sm"
+                ? "bg-emerald-500/20 text-emerald-300"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -125,11 +124,14 @@ export function PerformanceChart({
               data={eliteMarketData}
               margin={{ top: 10, right: 12, left: -12, bottom: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.07)"
+              />
               <XAxis
                 dataKey="shortName"
                 tick={{ fill: "#94a3b8", fontSize: 11 }}
-                axisLine={{ stroke: "#334155" }}
+                axisLine={{ stroke: "rgba(255,255,255,0.12)" }}
                 tickLine={false}
               />
               <YAxis
@@ -138,12 +140,12 @@ export function PerformanceChart({
                 tickLine={false}
                 tickFormatter={(v) => `${v}%`}
               />
-              <ReferenceLine y={0} stroke="#475569" />
+              <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" />
               <Tooltip
-                cursor={{ fill: "rgba(148, 163, 184, 0.08)" }}
+                cursor={{ fill: "rgba(255, 255, 255, 0.04)" }}
                 contentStyle={{
                   backgroundColor: "#090D16",
-                  borderColor: "#334155",
+                  borderColor: "rgba(255,255,255,0.14)",
                   borderRadius: "10px",
                   fontSize: "12px",
                   color: "#f1f5f9",
@@ -163,20 +165,20 @@ export function PerformanceChart({
                 {eliteMarketData.map((entry, idx) => (
                   <Cell
                     key={`best-${idx}`}
-                    fill={entry.bestRoi >= 0 ? "#10B981" : "#f43f5e"}
+                    fill={entry.bestRoi >= 0 ? "#10B981" : "#F43F5E"}
                   />
                 ))}
               </Bar>
               <Bar
                 dataKey="pinRoi"
                 name={t.chartPinnacle}
-                fill="#06B6D4"
+                fill="#94A3B8"
                 radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="clv"
                 name={t.chartClv}
-                fill="#a78bfa"
+                fill="#F59E0B"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
@@ -189,19 +191,22 @@ export function PerformanceChart({
             >
               <defs>
                 <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.35} />
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.32} />
                   <stop offset="95%" stopColor="#10B981" stopOpacity={0.02} />
                 </linearGradient>
-                <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.28} />
-                  <stop offset="95%" stopColor="#06B6D4" stopOpacity={0.02} />
+                <linearGradient id="slateGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#94A3B8" stopOpacity={0.22} />
+                  <stop offset="95%" stopColor="#94A3B8" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.07)"
+              />
               <XAxis
                 dataKey="season"
                 tick={{ fill: "#94a3b8", fontSize: 11 }}
-                axisLine={{ stroke: "#334155" }}
+                axisLine={{ stroke: "rgba(255,255,255,0.12)" }}
                 tickLine={false}
               />
               <YAxis
@@ -213,7 +218,7 @@ export function PerformanceChart({
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#090D16",
-                  borderColor: "#334155",
+                  borderColor: "rgba(255,255,255,0.14)",
                   borderRadius: "10px",
                   fontSize: "12px",
                   color: "#f1f5f9",
@@ -236,9 +241,9 @@ export function PerformanceChart({
                 type="monotone"
                 dataKey="flatPin"
                 name="Flat 1% Bankroll (Pinnacle +7.15% ROI)"
-                stroke="#06B6D4"
+                stroke="#94A3B8"
                 strokeWidth={2}
-                fill="url(#cyanGrad)"
+                fill="url(#slateGrad)"
               />
             </AreaChart>
           </ResponsiveContainer>
